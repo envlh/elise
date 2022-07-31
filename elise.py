@@ -52,15 +52,15 @@ def clean_grammatical_features(forms, replacements):
 
 
 def generate_forms(features, patterns, lemma):
-    r = lemma[:-2]
+    radical = lemma[:-2]
     forms = []
     for pattern in patterns:
         if lemma[-3:-2] == 'c' and pattern['pattern'].replace('%r%', '')[0] in ('a', 'â', 'o'):
-            representation = pattern['pattern'].replace('%r%', '{}ç'.format(r[:-1]))
+            representation = pattern['pattern'].replace('%r%', '{}ç'.format(radical[:-1]))
         elif lemma[-3:-2] == 'g' and pattern['pattern'].replace('%r%', '')[0] in ('a', 'â', 'o'):
-            representation = pattern['pattern'].replace('%r%', '{}e'.format(r))
+            representation = pattern['pattern'].replace('%r%', '{}e'.format(radical))
         else:
-            representation = pattern['pattern'].replace('%r%', r)
+            representation = pattern['pattern'].replace('%r%', radical)
         grammatical_features = []
         for feature in pattern['features']:
             grammatical_features.append(features[feature])
