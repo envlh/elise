@@ -29,6 +29,12 @@ def is_valid_lexeme(lexeme):
         return False
     if lexeme['lemmas']['fr']['value'][-3:-2] == 'c' or lexeme['lemmas']['fr']['value'][-3:-2] == 'g':
         return False
+    # multiples conjugaisons (exemple : copier-coller)
+    if '-' in lexeme['lemmas']['fr']['value']:
+        return False
+    # orthographe 1990 https://dictionnaire.lerobert.com/guide/rectifications-de-l-orthographe-de-1990-regles
+    if lexeme['lemmas']['fr']['value'][-4:] == 'eler' or lexeme['lemmas']['fr']['value'][-4:] == 'eter':
+        return False
     return True
 
 
