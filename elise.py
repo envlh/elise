@@ -1,3 +1,4 @@
+import copy
 import json
 import logging
 
@@ -11,8 +12,9 @@ def is_valid_lexeme(lexeme):
         return False
     if 'fr' not in lexeme['lemmas']:
         return False
+    lemma = lexeme['lemmas']['fr']['value']
     # uniquement premier groupe pour l'instant
-    if lexeme['lemmas']['fr']['value'][-2:] != 'er':
+    if lemma[-2:] != 'er':
         return False
     if 'P5186' not in lexeme['claims']:
         return False
@@ -21,28 +23,44 @@ def is_valid_lexeme(lexeme):
     if lexeme['claims']['P5186'][0]['mainsnak']['datavalue']['value']['id'] != 'Q2993354':
         return False
     # exceptions https://fr.wikipedia.org/wiki/Conjugaison_des_verbes_du_premier_groupe
-    if lexeme['lemmas']['fr']['value'][-3:] == 'yer':
+    if lemma[-3:] == 'yer':
         return False
-    if lexeme['lemmas']['fr']['value'][-4:-3] == 'e':
+    if lemma[-4:-3] == 'e':
         return False
-    if lexeme['lemmas']['fr']['value'][-4:-3] == 'é':
+    if lemma[-4:-3] == 'é':
         return False
-    if lexeme['lemmas']['fr']['value'][-3:-2] == 'c' or lexeme['lemmas']['fr']['value'][-3:-2] == 'g':
+    if lemma[-3:-2] == 'c':
         return False
     # multiples conjugaisons (exemple : copier-coller)
     if '-' in lexeme['lemmas']['fr']['value']:
         return False
     # orthographe 1990 https://dictionnaire.lerobert.com/guide/rectifications-de-l-orthographe-de-1990-regles
-    if lexeme['lemmas']['fr']['value'][-4:] == 'eler' or lexeme['lemmas']['fr']['value'][-4:] == 'eter':
+    if lemma[-4:] == 'eler' or lemma[-4:] == 'eter':
         return False
     return True
+
+
+def clean_grammatical_features(forms, replacements):
+    forms_copy = copy.deepcopy(forms)
+    for form in forms_copy:
+        features = []
+        for feature in form['grammaticalFeatures']:
+            if feature in replacements:
+                features.extend(replacements[feature])
+            else:
+                features.append(feature)
+        form['grammaticalFeatures'] = features
+    return forms_copy
 
 
 def generate_forms(features, patterns, lemma):
     r = lemma[:-2]
     forms = []
     for pattern in patterns:
-        representation = pattern['pattern'].replace('%r%', r)
+        if lemma[-3:-2] == 'g' and pattern['pattern'].replace('%r%', '')[0] in ('a', 'â', 'o'):
+            representation = pattern['pattern'].replace('%r%', '{}e'.format(r))
+        else:
+            representation = pattern['pattern'].replace('%r%', r)
         grammatical_features = []
         for feature in pattern['features']:
             grammatical_features.append(features[feature])
@@ -59,11 +77,11 @@ def are_forms_equal(a, b):
     return True
 
 
-def compute_forms(existing_forms, generated_forms):
+def compute_forms(base_forms, generated_forms):
     error = 0
     computed_forms = []
     # existing forms
-    for form_e in existing_forms:
+    for form_e in base_forms:
         computed_forms.append(form_e)
         found = False
         for form_g in generated_forms:
@@ -76,7 +94,7 @@ def compute_forms(existing_forms, generated_forms):
     # generated forms
     for form_g in generated_forms:
         found = False
-        for form_e in existing_forms:
+        for form_e in base_forms:
             if are_forms_equal(form_e, form_g):
                 found = True
                 break
@@ -103,11 +121,21 @@ def main():
     logging.getLogger().setLevel(logging.INFO)
     features = utils.load_json_file('conf/fr_features.json')
     patterns = utils.load_json_file('conf/fr_premier_groupe.json')
-    lid = 'L17692'
+    replacements = utils.load_json_file('conf/fr_replacements.json')
+    lid = 'L10251'
     lexeme = utils.fetch_url_json('https://www.wikidata.org/wiki/Special:EntityData/{}.json'.format(lid))['entities'][lid]
-    if is_valid_lexeme(lexeme):
+    if not is_valid_lexeme(lexeme):
+        logging.error('Elise cannot handle Lexeme {} at the moment.'.format(lid))
+    else:
+        # clean existing forms
+        clean_forms = clean_grammatical_features(lexeme['forms'], replacements)
+        # print(json.dumps(clean_forms, ensure_ascii=False))
+        # generate all forms
         generated_forms = generate_forms(features, patterns, lexeme['lemmas']['fr']['value'])
-        error, computed_forms = compute_forms(lexeme['forms'], generated_forms)
+        # print(json.dumps(generated_forms, ensure_ascii=False))
+        # merge forms
+        error, computed_forms = compute_forms(clean_forms, generated_forms)
+        # print(json.dumps(computed_forms, ensure_ascii=False))
         if error != 0:
             logging.error('Unrecognized forms in lexeme {}, no change applied.'.format(lid))
         elif computed_forms == lexeme['forms']:
@@ -115,8 +143,8 @@ def main():
         else:
             logging.info('Updating lexeme {}...'.format(lid))
             lexeme['forms'] = computed_forms
-            # site = utils.get_site()
-            # edit_lexeme(site, lid, lexeme)
+            site = utils.get_site()
+            edit_lexeme(site, lid, lexeme)
             logging.info('Done.')
 
 
