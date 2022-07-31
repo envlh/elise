@@ -1,0 +1,10 @@
+data
+user-*.py
+
+pywikibot.lwp
+throttle.ctrl
+
+.idea
+__pycache__
+apicache-py3
+venv
