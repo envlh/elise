@@ -29,8 +29,6 @@ def is_valid_lexeme(lexeme):
         return False
     if lemma[-4:-3] == 'é':
         return False
-    if lemma[-3:-2] == 'c':
-        return False
     # multiples conjugaisons (exemple : copier-coller)
     if '-' in lexeme['lemmas']['fr']['value']:
         return False
@@ -57,7 +55,9 @@ def generate_forms(features, patterns, lemma):
     r = lemma[:-2]
     forms = []
     for pattern in patterns:
-        if lemma[-3:-2] == 'g' and pattern['pattern'].replace('%r%', '')[0] in ('a', 'â', 'o'):
+        if lemma[-3:-2] == 'c' and pattern['pattern'].replace('%r%', '')[0] in ('a', 'â', 'o'):
+            representation = pattern['pattern'].replace('%r%', '{}ç'.format(r[:-1]))
+        elif lemma[-3:-2] == 'g' and pattern['pattern'].replace('%r%', '')[0] in ('a', 'â', 'o'):
             representation = pattern['pattern'].replace('%r%', '{}e'.format(r))
         else:
             representation = pattern['pattern'].replace('%r%', r)
@@ -122,7 +122,7 @@ def main():
     features = utils.load_json_file('conf/fr_features.json')
     patterns = utils.load_json_file('conf/fr_premier_groupe.json')
     replacements = utils.load_json_file('conf/fr_replacements.json')
-    lid = 'L10251'
+    lid = 'L28927'
     lexeme = utils.fetch_url_json('https://www.wikidata.org/wiki/Special:EntityData/{}.json'.format(lid))['entities'][lid]
     if not is_valid_lexeme(lexeme):
         logging.error('Elise cannot handle Lexeme {} at the moment.'.format(lid))
