@@ -23,8 +23,6 @@ def is_valid_lexeme(lexeme):
     if lexeme['claims']['P5186'][0]['mainsnak']['datavalue']['value']['id'] != 'Q2993354':
         return False
     # exceptions https://fr.wikipedia.org/wiki/Conjugaison_des_verbes_du_premier_groupe
-    if lemma[-3:] == 'yer':
-        return False
     if lemma[-4:-3] == 'e':
         return False
     if lemma[-4:-3] == 'é':
@@ -52,20 +50,33 @@ def clean_grammatical_features(forms, replacements):
 
 
 def generate_forms(features, patterns, lemma):
-    radical = lemma[:-2]
     forms = []
+    root = lemma[:-2]
     for pattern in patterns:
-        if lemma[-3:-2] == 'c' and pattern['pattern'].replace('%r%', '')[0] in ('a', 'â', 'o'):
-            representation = pattern['pattern'].replace('%r%', '{}ç'.format(radical[:-1]))
-        elif lemma[-3:-2] == 'g' and pattern['pattern'].replace('%r%', '')[0] in ('a', 'â', 'o'):
-            representation = pattern['pattern'].replace('%r%', '{}e'.format(radical))
+        representations = []
+        suffix = pattern['suffix']
+        # -cer
+        if root[-1] == 'c' and suffix[0] in ('a', 'â', 'o'):
+            representations.append('{}ç{}'.format(root[:-1], suffix))
+        # -ger
+        elif root[-1] == 'g' and suffix[0] in ('a', 'â', 'o'):
+            representations.append('{}e{}'.format(root, suffix))
+        # -ayer
+        elif root[-2:] == 'ay' and (suffix in ('e', 'es', 'ent') or (suffix[:2] == 'er' and suffix != 'er')):
+            representations.append('{}{}'.format(root, suffix))
+            representations.append('{}i{}'.format(root[:-1], suffix))
+        # -oyer -uyer
+        elif (root[-2:] == 'oy' or root[-2:] == 'uy') and (suffix in ('e', 'es', 'ent') or (suffix[:2] == 'er' and suffix != 'er')):
+            representations.append('{}i{}'.format(root[:-1], suffix))
+        # default
         else:
-            representation = pattern['pattern'].replace('%r%', radical)
+            representations.append('{}{}'.format(root, suffix))
         grammatical_features = []
         for feature in pattern['features']:
             grammatical_features.append(features[feature])
-        form = {'representations': {'fr': {'language': 'fr', 'value': representation}}, 'grammaticalFeatures': grammatical_features, 'claims': {}, 'add': ''}
-        forms.append(form)
+        for representation in representations:
+            form = {'representations': {'fr': {'language': 'fr', 'value': representation}}, 'grammaticalFeatures': grammatical_features, 'claims': {}, 'add': ''}
+            forms.append(form)
     return forms
 
 
@@ -122,7 +133,7 @@ def main():
     features = utils.load_json_file('conf/fr_features.json')
     patterns = utils.load_json_file('conf/fr_premier_groupe.json')
     replacements = utils.load_json_file('conf/fr_replacements.json')
-    lid = 'L28927'
+    lid = 'L689016'
     lexeme = utils.fetch_url_json('https://www.wikidata.org/wiki/Special:EntityData/{}.json'.format(lid))['entities'][lid]
     if not is_valid_lexeme(lexeme):
         logging.error('Elise cannot handle Lexeme {} at the moment.'.format(lid))
