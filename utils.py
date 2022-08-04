@@ -1,6 +1,7 @@
 import json
 import pywikibot
 import requests
+import urllib.parse
 
 
 def file_get_contents(filename):
@@ -23,7 +24,12 @@ def fetch_url(url):
 
 
 def fetch_url_json(url):
-    return json.loads(requests.get(url, headers={'User-Agent': 'elise/0.1'}, allow_redirects=False).text)
+    return json.loads(fetch_url(url).text)
+
+
+def sparql_query(query):
+    url = 'https://query.wikidata.org/sparql?{}'.format(urllib.parse.urlencode({'query': query, 'format': 'json'}))
+    return fetch_url_json(url)['results']['bindings']
 
 
 def get_site():

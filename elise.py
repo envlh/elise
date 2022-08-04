@@ -128,12 +128,7 @@ def edit_lexeme(site, lid, lexeme):
     site.simple_request(**request).submit()
 
 
-def main():
-    logging.getLogger().setLevel(logging.INFO)
-    features = utils.load_json_file('conf/fr_features.json')
-    patterns = utils.load_json_file('conf/fr_premier_groupe.json')
-    replacements = utils.load_json_file('conf/fr_replacements.json')
-    lid = 'L689016'
+def improve_lexeme(lid, features, replacements, patterns, site):
     lexeme = utils.fetch_url_json('https://www.wikidata.org/wiki/Special:EntityData/{}.json'.format(lid))['entities'][lid]
     if not is_valid_lexeme(lexeme):
         logging.error('Elise cannot handle Lexeme {} at the moment.'.format(lid))
@@ -154,9 +149,20 @@ def main():
         else:
             logging.info('Updating lexeme {}...'.format(lid))
             lexeme['forms'] = computed_forms
-            site = utils.get_site()
             edit_lexeme(site, lid, lexeme)
             logging.info('Done.')
+
+
+def main():
+    logging.getLogger().setLevel(logging.INFO)
+    features = utils.load_json_file('conf/fr_features.json')
+    replacements = utils.load_json_file('conf/fr_replacements.json')
+    patterns = utils.load_json_file('conf/fr_premier_groupe.json')
+    site = utils.get_site()
+    lexemes = utils.sparql_query('SELECT DISTINCT ?lexeme (MD5(CONCAT(str(?item),str(RAND()))) as ?random) { ?lexeme dct:language wd:Q150 ; wdt:P5186 wd:Q2993354 ; wikibase:lemma ?lemma } ORDER BY ?random LIMIT 20')
+    for lexeme in lexemes:
+        lexeme_id = lexeme['lexeme']['value'][31:]
+        improve_lexeme(lexeme_id, features, replacements, patterns, site)
 
 
 if __name__ == '__main__':
