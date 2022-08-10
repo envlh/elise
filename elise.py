@@ -162,7 +162,8 @@ def main():
     replacements = utils.load_json_file('conf/fr_replacements.json')
     patterns = utils.load_json_file('conf/fr_premier_groupe.json')
     site = utils.get_site()
-    lexemes = utils.sparql_query('SELECT DISTINCT ?lexeme (MD5(CONCAT(str(?item),str(RAND()))) as ?random) { ?lexeme dct:language wd:Q150 ; wdt:P5186 wd:Q2993354 ; wikibase:lemma ?lemma } ORDER BY ?random LIMIT 20')
+    lexemes = utils.sparql_query('SELECT DISTINCT ?lexeme { ?lexeme dct:language wd:Q150 ; wikibase:lexicalCategory wd:Q24905 ; wdt:P5186 wd:Q2993354 }')
+    logging.info('{} verbs found.'.format(len(lexemes)))
     for lexeme in lexemes:
         lexeme_id = lexeme['lexeme']['value'][31:]
         improve_lexeme(lexeme_id, features, replacements, patterns, site)
