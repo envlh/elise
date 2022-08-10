@@ -13,6 +13,9 @@ def is_valid_lexeme(lexeme):
     if 'fr' not in lexeme['lemmas']:
         return False
     lemma = lexeme['lemmas']['fr']['value']
+    # pronominal verb
+    if lemma[:3] == 'se ' or lemma[:2] == 's\'':
+        return False
     # uniquement premier groupe pour l'instant
     if lemma[-2:] != 'er':
         return False
