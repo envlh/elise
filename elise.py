@@ -134,7 +134,7 @@ def edit_lexeme(site, lid, lexeme):
 def improve_lexeme(lid, features, replacements, patterns, site):
     lexeme = utils.fetch_url_json('https://www.wikidata.org/wiki/Special:EntityData/{}.json'.format(lid))['entities'][lid]
     if not is_valid_lexeme(lexeme):
-        logging.error('Elise cannot handle Lexeme {} at the moment.'.format(lid))
+        logging.error('Elise cannot handle lexeme {} at the moment.'.format(lid))
     else:
         # clean existing forms
         clean_forms = clean_grammatical_features(lexeme['forms'], replacements)
@@ -146,9 +146,9 @@ def improve_lexeme(lid, features, replacements, patterns, site):
         error, computed_forms = compute_forms(clean_forms, generated_forms)
         # print(json.dumps(computed_forms, ensure_ascii=False))
         if error != 0:
-            logging.error('Unrecognized forms in lexeme {}, no change applied.'.format(lid))
+            logging.error('Unrecognized forms in lexeme {}, no change applied. Link: https://www.wikidata.org/wiki/Lexeme:{}'.format(lid, lid))
         elif computed_forms == lexeme['forms']:
-            logging.info('No change needed to lexeme {}.'.format(lid))
+            logging.debug('No change needed to lexeme {}.'.format(lid))
         else:
             logging.info('Updating lexeme {}...'.format(lid))
             lexeme['forms'] = computed_forms
