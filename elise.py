@@ -58,8 +58,11 @@ def generate_forms(features, patterns, lemma):
     for pattern in patterns:
         representations = []
         suffix = pattern['suffix']
+        # envoyer, renvoyer
+        if lemma in ('envoyer', 'renvoyer') and (('indicatif' in pattern['features'] and 'futur simple' in pattern['features']) or ('conditionnel' in pattern['features'] and 'présent' in pattern['features'])):
+            representations.append('{}err{}'.format(root[:-2], suffix[2:]))
         # -cer
-        if root[-1] == 'c' and suffix[0] in ('a', 'â', 'o'):
+        elif root[-1] == 'c' and suffix[0] in ('a', 'â', 'o'):
             representations.append('{}ç{}'.format(root[:-1], suffix))
         # -ger
         elif root[-1] == 'g' and suffix[0] in ('a', 'â', 'o'):
