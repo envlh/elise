@@ -16,8 +16,8 @@ Elise is a tool to generate and import forms to French lexemes on Wikidata.
   * *envoyer*, *renvoyer* ✓
   * *e* on penultimate syllable ✗
   * *é* on penultimate syllable ✗
-* 2nd group ✗
-  * general case ✗
+* 2nd group
+  * general case ✓
   * *fleurir* ✗
   * *haïr* ✗
 * 3d group ✗
