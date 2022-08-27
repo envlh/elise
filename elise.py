@@ -29,7 +29,7 @@ def get_group(lexeme):
 def is_handled_lexeme(lexeme, group):
     lemma = lexeme['lemmas']['fr']['value']
     # pronominal verb
-    if lemma[:3] == 'se ' or lemma[:2] == 's\'':
+    if lemma[:3] == 'se ' or lemma[:2] == 's\'' or lemma[:2] == 's’':
         return False
     # multiples conjugaisons (exemple : copier-coller)
     if '-' in lexeme['lemmas']['fr']['value']:
