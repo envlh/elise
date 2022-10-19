@@ -197,7 +197,7 @@ def main():
     features = utils.load_json_file('conf/fr_features.json')
     replacements = utils.load_json_file('conf/fr_replacements.json')
     site = utils.get_site()
-    lexemes = utils.sparql_query('SELECT DISTINCT ?lexeme { ?lexeme dct:language wd:Q150 ; wikibase:lexicalCategory wd:Q24905 ; wdt:P5186 ?group . VALUES ?group { wd:Q2993354 wd:Q2993353 } }')
+    lexemes = utils.sparql_query('SELECT DISTINCT ?lexeme { ?lexeme dct:language wd:Q150 ; wikibase:lexicalCategory wd:Q24905 ; wdt:P5186 ?group . OPTIONAL { ?lexeme ontolex:lexicalForm ?form } . VALUES ?group { wd:Q2993354 wd:Q2993353 } } GROUP BY ?lexeme HAVING (COUNT(DISTINCT ?form) < 51)')
     logging.info('{} verbs found.'.format(len(lexemes)))
     for lexeme in lexemes:
         lexeme_id = lexeme['lexeme']['value'][31:]
