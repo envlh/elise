@@ -52,7 +52,7 @@ def is_handled_lexeme(lexeme, group):
         if lemma[-2:] != 'ir':
             return False
         # exceptions
-        if lemma in ('fleurir', 'haïr'):
+        if lemma == 'haïr' or lemma.endswith('fleurir'):
             return False
         return True
     return False
